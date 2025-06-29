@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Accelerometer Data Sender</title>
+  <title>Advanced Accelerometer Data Sender</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
@@ -14,6 +14,8 @@
       --danger: #f72585;
       --dark: #212529;
       --light: #f8f9fa;
+      --with-gravity: #4cc9f0;
+      --without-gravity: #ff9e00;
     }
     
     * {
@@ -83,6 +85,7 @@
       justify-content: center;
       gap: 15px;
       margin: 20px 0;
+      flex-wrap: wrap;
     }
     
     button {
@@ -222,6 +225,60 @@
       color: #4cc9f0;
     }
     
+    .mode-selection {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .mode-btn {
+      background: rgba(0, 0, 0, 0.2);
+      border: 2px solid var(--with-gravity);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .mode-btn.active {
+      background: var(--with-gravity);
+      box-shadow: 0 0 15px rgba(76, 201, 240, 0.5);
+    }
+    
+    .mode-btn.without-gravity {
+      border-color: var(--without-gravity);
+    }
+    
+    .mode-btn.without-gravity.active {
+      background: var(--without-gravity);
+      box-shadow: 0 0 15px rgba(255, 158, 0, 0.5);
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .stat-box {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 150px;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #4facfe;
+    }
+    
     @media (max-width: 600px) {
       .button-container {
         flex-direction: column;
@@ -230,14 +287,19 @@
       .data-container {
         grid-template-columns: 1fr;
       }
+      
+      .mode-selection {
+        flex-direction: column;
+        align-items: center;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📱 Accelerometer Data Sender</h1>
-      <p class="subtitle">Fixed Solution - Now with Proper Gravity Handling</p>
+      <h1>📱 Advanced Accelerometer Data</h1>
+      <p class="subtitle">With Gravity/Non-Gravity Selection & High-Frequency Data</p>
       <div class="sensor-status status-inactive" id="sensorStatus">
         <i>🔴</i> Accelerometer: Inactive
       </div>
@@ -246,6 +308,16 @@
     <main>
       <div class="card">
         <h2><i>⚙️</i> Control Panel</h2>
+        
+        <div class="mode-selection">
+          <button id="withGravityBtn" class="mode-btn active">
+            <i>🌎</i> With Gravity
+          </button>
+          <button id="withoutGravityBtn" class="mode-btn without-gravity">
+            <i>🚀</i> Without Gravity
+          </button>
+        </div>
+        
         <div class="button-container">
           <button id="startBtn">
             <i>📲</i> Start Sending Data
@@ -255,9 +327,19 @@
           </button>
         </div>
         
-        <div class="firebase-info">
-          <strong>Firebase Configuration:</strong>
-          <p>Replace the placeholder config in the JavaScript with your Firebase project details.</p>
+        <div class="stats">
+          <div class="stat-box">
+            <div>Frequency</div>
+            <div id="frequencyValue" class="stat-value">0 Hz</div>
+          </div>
+          <div class="stat-box">
+            <div>Data Points</div>
+            <div id="dataCount" class="stat-value">0</div>
+          </div>
+          <div class="stat-box">
+            <div>Current Mode</div>
+            <div id="currentMode" class="stat-value">With Gravity</div>
+          </div>
         </div>
       </div>
       
@@ -266,23 +348,23 @@
         <div class="data-container">
           <div class="data-box">
             <div class="data-label">X-Axis</div>
-            <div id="xValue" class="data-value">0.00</div>
-            <div>g-force</div>
+            <div id="xValue" class="data-value">0.0000</div>
+            <div>m/s²</div>
           </div>
           <div class="data-box">
             <div class="data-label">Y-Axis</div>
-            <div id="yValue" class="data-value">0.00</div>
-            <div>g-force</div>
+            <div id="yValue" class="data-value">0.0000</div>
+            <div>m/s²</div>
           </div>
           <div class="data-box">
             <div class="data-label">Z-Axis</div>
-            <div id="zValue" class="data-value">0.00</div>
-            <div>g-force</div>
+            <div id="zValue" class="data-value">0.0000</div>
+            <div>m/s²</div>
           </div>
         </div>
         
         <div class="magnitude">
-          Magnitude: <span id="magnitudeValue" class="magnitude-value">0.00</span> g
+          Absolute Acceleration: <span id="magnitudeValue" class="magnitude-value">0.0000</span> m/s²
         </div>
         
         <div class="visualization">
@@ -296,24 +378,28 @@
       </div>
       
       <div class="card">
-        <h2><i>🔧</i> Fix Details</h2>
+        <h2><i>🔧</i> Data Format in Firebase</h2>
         <div class="debug-info">
-          <p><strong>Fixed Issue:</strong> Proper handling of gravity compensation</p>
-          <p><strong>Solution:</strong> Using <code>accelerationIncludingGravity</code> instead of <code>acceleration</code></p>
-          <p><strong>Key Changes:</strong></p>
-          <ul>
-            <li>Corrected event property to <code>event.accelerationIncludingGravity</code></li>
-            <li>Added gravity magnitude calculation</li>
-            <li>Enhanced error handling for sensor access</li>
-            <li>Improved UI with real-time visualization</li>
-          </ul>
+          <p>Each data point is stored with the following structure:</p>
+          <pre>
+{
+  "time_absolute": 1719762456123,      // Timestamp in milliseconds
+  "time_relative": 12.345,             // Seconds since start
+  "accel_x": -0.1234,                  // X-axis acceleration (m/s²)
+  "accel_y": 1.2345,                   // Y-axis acceleration (m/s²)
+  "accel_z": 9.8123,                   // Z-axis acceleration (m/s²)
+  "abs_accel": 9.9231,                 // Absolute acceleration (m/s²)
+  "date": "06-30-2025",                // Date in MM-DD-YYYY format
+  "mode": "withGravity"                // Data collection mode
+}</pre>
+          <p>All acceleration values are stored with 4 decimal points.</p>
         </div>
       </div>
     </main>
   </div>
 
   <script>
-    // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCtj_5WJSZBd_OyQTnvRxHp86jq3wm_nC4",
       authDomain: "gym-assistant-c17bf.firebaseapp.com",
@@ -339,18 +425,35 @@
     const zValue = document.getElementById('zValue');
     const magnitudeValue = document.getElementById('magnitudeValue');
     const accelBall = document.getElementById('accelBall');
+    const withGravityBtn = document.getElementById('withGravityBtn');
+    const withoutGravityBtn = document.getElementById('withoutGravityBtn');
+    const frequencyValue = document.getElementById('frequencyValue');
+    const dataCount = document.getElementById('dataCount');
+    const currentMode = document.getElementById('currentMode');
 
     // State variables
     let isSending = false;
-    let lastSent = 0;
-    let lastData = { x: 0, y: 0, z: 0 };
+    let sessionStartTime = 0;
+    let dataPointsSent = 0;
+    let lastUpdateTime = 0;
+    let updateCount = 0;
+    let frequency = 0;
+    let gravityMode = 'withGravity';
+    let sessionRef = null;
+    let sessionId = null;
+
+    // Format date as MM-DD-YYYY
+    function formatDate(date) {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${month}-${day}-${year}`;
+    }
 
     function updateBallPosition(x, y) {
-      // Convert g-force values to pixel offsets (1g ≈ 50px)
-      const posX = x * 50;
-      const posY = y * 50;
+      const posX = x * 5;
+      const posY = y * 5;
       
-      // Limit movement to container boundaries
       const container = accelBall.parentElement;
       const maxX = (container.clientWidth - accelBall.clientWidth) / 2;
       const maxY = (container.clientHeight - accelBall.clientHeight) / 2;
@@ -361,36 +464,51 @@
       accelBall.style.transform = `translate(calc(-50% + ${boundedX}px), calc(-50% + ${boundedY}px))`;
     }
 
-    function updateUI(acc, now) {
+    function updateUI(acc, absAccel, now) {
       if (!acc) return;
       
-      // Update values display
+      // Update values display with 4 decimal places
       const x = acc.x || 0;
       const y = acc.y || 0;
       const z = acc.z || 0;
       
-      xValue.textContent = x.toFixed(2);
-      yValue.textContent = y.toFixed(2);
-      zValue.textContent = z.toFixed(2);
+      xValue.textContent = x.toFixed(4);
+      yValue.textContent = y.toFixed(4);
+      zValue.textContent = z.toFixed(4);
       
-      // Calculate magnitude
-      const magnitude = Math.sqrt(x*x + y*y + z*z).toFixed(2);
-      magnitudeValue.textContent = magnitude;
+      // Update magnitude with 4 decimal places
+      magnitudeValue.textContent = absAccel.toFixed(4);
       
       // Update ball position based on X and Y acceleration
       updateBallPosition(x, y);
       
       // Update output display
+      const relativeTime = (now - sessionStartTime) / 1000;
       outputDiv.innerHTML = `
-        <div><b>Last sent data:</b></div>
-        <div><b>x:</b> ${x.toFixed(2)}, <b>y:</b> ${y.toFixed(2)}, <b>z:</b> ${z.toFixed(2)}</div>
-        <div><b>Time:</b> ${new Date(now).toLocaleTimeString()}</div>
-        <div><b>Magnitude:</b> ${magnitude} g</div>
+        <div><b>Current data (${gravityMode === 'withGravity' ? 'With Gravity' : 'Without Gravity'}):</b></div>
+        <div><b>x:</b> ${x.toFixed(4)}, <b>y:</b> ${y.toFixed(4)}, <b>z:</b> ${z.toFixed(4)}</div>
+        <div><b>Absolute:</b> ${absAccel.toFixed(4)} m/s²</div>
+        <div><b>Time:</b> ${relativeTime.toFixed(3)}s</div>
       `;
+    }
+
+    function calculateAbsoluteAcceleration(acc) {
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+      return Math.sqrt(x*x + y*y + z*z);
     }
 
     function startListening() {
       if (isSending) return;
+      
+      // Create a new session
+      sessionId = Date.now().toString();
+      sessionRef = db.ref(`accelerationSessions/${sessionId}`);
+      sessionStartTime = Date.now();
+      dataPointsSent = 0;
+      updateCount = 0;
+      lastUpdateTime = Date.now();
       
       window.addEventListener('devicemotion', handleMotionEvent);
       isSending = true;
@@ -400,35 +518,65 @@
       sensorStatus.className = 'sensor-status status-active';
       
       outputDiv.innerHTML = '<div>Listening for motion data...</div>';
+      
+      // Start frequency calculation
+      setInterval(calculateFrequency, 1000);
     }
 
     function handleMotionEvent(event) {
-      // FIXED: Using accelerationIncludingGravity instead of acceleration
-      const acc = event.accelerationIncludingGravity;
       const now = Date.now();
+      updateCount++;
+      
+      let acc;
+      if (gravityMode === 'withGravity') {
+        acc = event.accelerationIncludingGravity;
+      } else {
+        acc = event.acceleration;
+      }
+      
+      if (!acc) return;
+      
+      // Calculate absolute acceleration
+      const absAccel = calculateAbsoluteAcceleration(acc);
       
       // Always update UI for smooth visualization
-      updateUI(acc, now);
+      updateUI(acc, absAccel, now);
       
-      // Only send to Firebase once per second
-      if (now - lastSent > 1000) {
-        lastSent = now;
-        lastData = { 
-          x: acc.x || 0, 
-          y: acc.y || 0, 
-          z: acc.z || 0 
-        };
-        
-        // Send data to Firebase
-        db.ref("accelerationData").push({
-          x: lastData.x,
-          y: lastData.y,
-          z: lastData.z,
-          time: now
-        }).catch(error => {
+      // Format values with 4 decimal places
+      const formattedData = {
+        time_absolute: now,
+        time_relative: (now - sessionStartTime) / 1000, // in seconds
+        accel_x: parseFloat((acc.x || 0).toFixed(4)),
+        accel_y: parseFloat((acc.y || 0).toFixed(4)),
+        accel_z: parseFloat((acc.z || 0).toFixed(4)),
+        abs_accel: parseFloat(absAccel.toFixed(4)),
+        date: formatDate(new Date(now)),
+        mode: gravityMode
+      };
+      
+      // Send data to Firebase
+      sessionRef.push(formattedData)
+        .then(() => {
+          dataPointsSent++;
+          dataCount.textContent = dataPointsSent;
+        })
+        .catch(error => {
           outputDiv.innerHTML += `<div style="color: var(--danger)">Firebase Error: ${error.message}</div>`;
         });
+    }
+
+    function calculateFrequency() {
+      const now = Date.now();
+      const elapsed = (now - lastUpdateTime) / 1000; // in seconds
+      
+      if (elapsed > 0) {
+        frequency = updateCount / elapsed;
+        frequencyValue.textContent = frequency.toFixed(1) + " Hz";
       }
+      
+      // Reset counters
+      updateCount = 0;
+      lastUpdateTime = now;
     }
 
     function stopSending() {
@@ -441,7 +589,28 @@
       sensorStatus.innerHTML = '<i>🔴</i> Accelerometer: Inactive';
       sensorStatus.className = 'sensor-status status-inactive';
       
-      outputDiv.innerHTML = '<div>Data sending stopped</div>';
+      outputDiv.innerHTML = `
+        <div>Data sending stopped</div>
+        <div>Total data points sent: ${dataPointsSent}</div>
+        <div>Average frequency: ${frequency.toFixed(1)} Hz</div>
+      `;
+    }
+
+    function setGravityMode(mode) {
+      gravityMode = mode;
+      currentMode.textContent = mode === 'withGravity' ? 'With Gravity' : 'Without Gravity';
+      
+      if (mode === 'withGravity') {
+        withGravityBtn.classList.add('active');
+        withoutGravityBtn.classList.remove('active');
+      } else {
+        withoutGravityBtn.classList.add('active');
+        withGravityBtn.classList.remove('active');
+      }
+      
+      if (isSending) {
+        outputDiv.innerHTML = `<div>Switched to ${mode} mode</div>`;
+      }
     }
 
     function requestSensorPermission() {
@@ -469,6 +638,11 @@
     // Initialize UI state
     startBtn.addEventListener('click', requestSensorPermission);
     stopBtn.addEventListener('click', stopSending);
+    withGravityBtn.addEventListener('click', () => setGravityMode('withGravity'));
+    withoutGravityBtn.addEventListener('click', () => setGravityMode('withoutGravity'));
+    
+    // Initialize mode buttons
+    setGravityMode('withGravity');
     
     // Display Firebase config status
     if (firebaseConfig.apiKey === "YOUR_API_KEY") {
