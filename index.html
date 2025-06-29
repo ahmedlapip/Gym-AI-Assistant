@@ -524,48 +524,50 @@
     }
 
     function handleMotionEvent(event) {
-      const now = Date.now();
-      updateCount++;
-      console.log("Raw accelerationIncludingGravity:", event.accelerationIncludingGravity);
-      console.log("Raw acceleration:", event.acceleration);
+  const now = Date.now();
+  updateCount++;
 
-      let acc;
-      if (gravityMode === 'withGravity') {
-        acc = event.accelerationIncludingGravity;
-      } else {
-        acc = event.acceleration;
-      }
-      
-      if (!acc) return;
-      
-      // Calculate absolute acceleration
-      const absAccel = calculateAbsoluteAcceleration(acc);
-      
-      // Always update UI for smooth visualization
-      updateUI(acc, absAccel, now);
-      
-      // Format values with 4 decimal places
-      const formattedData = {
-        time_absolute: now,
-        time_relative: (now - sessionStartTime) / 1000, // in seconds
-        accel_x: acc.x || 0,
-        accel_y: acc.y || 0,
-        accel_z: acc.z || 0,
-        abs_accel: absAccel,
-        date: formatDate(new Date(now)),
-        mode: gravityMode
-      };
-      
-      // Send data to Firebase
-      sessionRef.push(formattedData)
-        .then(() => {
-          dataPointsSent++;
-          dataCount.textContent = dataPointsSent;
-        })
-        .catch(error => {
-          outputDiv.innerHTML += `<div style="color: var(--danger)">Firebase Error: ${error.message}</div>`;
-        });
-    }
+  // 🔍 Log raw values to inspect precision
+  console.log("Raw accelerationIncludingGravity:", event.accelerationIncludingGravity);
+  console.log("Raw acceleration:", event.acceleration);
+
+  let acc;
+  if (gravityMode === 'withGravity') {
+    acc = event.accelerationIncludingGravity;
+  } else {
+    acc = event.acceleration;
+  }
+
+  if (!acc) return;
+
+  // Calculate absolute acceleration
+  const absAccel = calculateAbsoluteAcceleration(acc);
+
+  // Always update UI for smooth visualization
+  updateUI(acc, absAccel, now);
+
+  // Format values with 4 decimal places
+  const formattedData = {
+    time_absolute: now,
+    time_relative: (now - sessionStartTime) / 1000, // in seconds
+    accel_x: parseFloat((acc.x || 0).toFixed(4)),
+    accel_y: parseFloat((acc.y || 0).toFixed(4)),
+    accel_z: parseFloat((acc.z || 0).toFixed(4)),
+    abs_accel: parseFloat(absAccel.toFixed(4)),
+    date: formatDate(new Date(now)),
+    mode: gravityMode
+  };
+
+  // Send data to Firebase
+  sessionRef.push(formattedData)
+    .then(() => {
+      dataPointsSent++;
+      dataCount.textContent = dataPointsSent;
+    })
+    .catch(error => {
+      outputDiv.innerHTML += `<div style="color: var(--danger)">Firebase Error: ${error.message}</div>`;
+    });
+}
 
     function calculateFrequency() {
       const now = Date.now();
