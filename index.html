@@ -472,12 +472,12 @@
       const y = acc.y || 0;
       const z = acc.z || 0;
       
-      xValue.textContent = x.toFixed(4);
-      yValue.textContent = y.toFixed(4);
-      zValue.textContent = z.toFixed(4);
+            xValue.textContent = x;
+      yValue.textContent = y;
+      zValue.textContent = z;
       
-      // Update magnitude with 4 decimal places
-      magnitudeValue.textContent = absAccel.toFixed(4);
+      // Update magnitude
+      magnitudeValue.textContent = absAccel;
       
       // Update ball position based on X and Y acceleration
       updateBallPosition(x, y);
@@ -486,9 +486,9 @@
       const relativeTime = (now - sessionStartTime) / 1000;
       outputDiv.innerHTML = `
         <div><b>Current data (${gravityMode === 'withGravity' ? 'With Gravity' : 'Without Gravity'}):</b></div>
-        <div><b>x:</b> ${x.toFixed(4)}, <b>y:</b> ${y.toFixed(4)}, <b>z:</b> ${z.toFixed(4)}</div>
-        <div><b>Absolute:</b> ${absAccel.toFixed(4)} m/s²</div>
-        <div><b>Time:</b> ${relativeTime.toFixed(3)}s</div>
+        <div><b>x:</b> ${x}, <b>y:</b> ${y}, <b>z:</b> ${z}</div>
+        <div><b>Absolute:</b> ${absAccel} m/s²</div>
+        <div><b>Time:</b> ${relativeTime}s</div>
       `;
     }
 
@@ -550,10 +550,10 @@
   const formattedData = {
     time_absolute: now,
     time_relative: (now - sessionStartTime) / 1000, // in seconds
-    accel_x: parseFloat((acc.x || 0).toFixed(4)),
-    accel_y: parseFloat((acc.y || 0).toFixed(4)),
-    accel_z: parseFloat((acc.z || 0).toFixed(4)),
-    abs_accel: parseFloat(absAccel.toFixed(4)),
+    accel_x: acc.x || 0,
+    accel_y: acc.y || 0,
+    accel_z: acc.z || 0,
+    abs_accel: absAccel,
     date: formatDate(new Date(now)),
     mode: gravityMode
   };
