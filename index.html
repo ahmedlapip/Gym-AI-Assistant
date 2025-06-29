@@ -546,10 +546,10 @@
       const formattedData = {
         time_absolute: now,
         time_relative: (now - sessionStartTime) / 1000, // in seconds
-        accel_x: parseFloat((acc.x || 0).toFixed(4)),
-        accel_y: parseFloat((acc.y || 0).toFixed(4)),
-        accel_z: parseFloat((acc.z || 0).toFixed(4)),
-        abs_accel: parseFloat(absAccel.toFixed(4)),
+        accel_x: acc.x || 0,
+        accel_y: acc.y || 0,
+        accel_z: acc.z || 0,
+        abs_accel: absAccel,
         date: formatDate(new Date(now)),
         mode: gravityMode
       };
