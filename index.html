@@ -526,7 +526,9 @@
     function handleMotionEvent(event) {
       const now = Date.now();
       updateCount++;
-      
+      console.log("Raw accelerationIncludingGravity:", event.accelerationIncludingGravity);
+      console.log("Raw acceleration:", event.acceleration);
+
       let acc;
       if (gravityMode === 'withGravity') {
         acc = event.accelerationIncludingGravity;
